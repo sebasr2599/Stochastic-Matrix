@@ -9,12 +9,12 @@
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
-/*
--u n m
--a 
-*/
+#include <time.h>
+#include <cmath>
+
 int usages(char *flag, char *filename);
 int user(char *rows, char *columns);
+int automaticMat();
 double** Make2DDoubleArray(int arraySizeX, int arraySizeY);
 void print_arr(double **arr, int rows, int columns);
 bool isStochastic(double **arr, int rows, int columns);
@@ -31,7 +31,7 @@ int main(int argc, char *argv[]){
     if (strcmp(argv[1], "-u") == 0 && argc == 3)
         return user(argv[2],argv[2]);
     if (strcmp(argv[1], "-a") == 0 && argc == 2)
-        printf("este va a ser automatico");
+        return automaticMat();
     
 
     return usages(argv[1], argv[0]);
@@ -121,6 +121,86 @@ int user(char *rows, char *columns){
     return 0;
 }
 
+int automaticMat(){
+    int rows = 3, columns = 3;
+    double **arr = Make2DDoubleArray(rows,columns);
+    srand( (unsigned)time( NULL ) );
+
+    for(int i = 0; i< rows; i++){
+        int a = rand();
+        int b = rand()%a/2;
+        // printf("a: %d\tb: %d\n",a,b);
+        float numA = (float) a/RAND_MAX;
+        float numB = (float) b/RAND_MAX;
+        float numC = 1.0 - (numA + numB);
+
+        numA = floor(numA * 100.0) / 100.0;
+        numB = floor(numB * 100.0) / 100.0;
+        numC = floor(numC * 100.0) / 100.0;
+
+        // printf("a: %f\tb: %f\tc: %f\n\n",numA,numB,numC);
+        arr[i][0] = numA;
+        arr[i][1] = numB;
+        arr[i][2] = numC;
+        // for(int j = 0; j<columns; i++){
+        //     arr[i][j] = 
+        // }
+    }
+    std::cout<<"The stochastic Matrix is: "<<std::endl;
+    print_arr(arr,rows, columns);
+    
+    int des;
+    do{
+        printMenu();
+        std::cin>>des;
+        int r = rows, c = columns;
+        double **arrTemp = Make2DDoubleArray(r,c);
+        switch(des){
+            case 1:
+                std::cout<<"Enter the direction i j of the matrix and the power"<<std::endl;
+                int n,m,p;
+                std::cin>>n>>m>>p;
+                powMat(arr,arrTemp,r,c,p);
+                std::cout<<"The probability is: "<<arrTemp[n][m]<<std::endl;
+                for (int i = 0; i < r; i++){
+                    free(arrTemp[i]);
+                }
+                free(arrTemp);
+                break;
+            case 2:
+                powMat(arr,arrTemp,r,c,100);
+                std::cout<<"The long term of the matrix is"<<std::endl;
+                print_arr(arrTemp,r,c);
+                for (int i = 0; i < r; i++){
+                    free(arrTemp[i]);
+                }
+                free(arrTemp);
+                break;
+            case 3:
+                powMat(arr,arrTemp,r,c,100);
+                isRegular(arrTemp,r,c)?std::cout<<"The matrix is regular": std::cout<<"The matrix is not regular";
+                for (int i = 0; i < r; i++){
+                    free(arrTemp[i]);
+                }
+                free(arrTemp);
+                break;
+            case 4:
+                std::cout<<"Goodbye!"<<std::endl;
+                break;
+            default:
+                break;
+        }
+    }while(des!=4);
+    
+    //memory cleanup
+    for (int i = 0; i < rows; i++){
+        free(arr[i]);
+    }
+
+    free(arr);
+    return 0;
+}
+
 void print_arr(double **arr, int rows, int columns){
     for(int i =0; i<rows; i++){
         for(int j = 0; j<columns;j++){
@@ -165,14 +245,20 @@ void printMenu(){
 void powMat(double **arr, double **powArr, int rows, int columns, int p){
     matIni(powArr, rows, columns);
     double **arrTemp = Make2DDoubleArray(rows,columns);
+    for(int i = 0; i<rows; i++){
+            for(int j = 0; j<columns;j++){
+                arrTemp[i][j] = arr[i][j];
+            }
+        }
     for(int x = 0; x<p; x++){
+        matMul(arr, arrTemp, powArr, rows, columns);
         for(int i = 0; i<rows; i++){
             for(int j = 0; j<columns;j++){
                 arrTemp[i][j] = powArr[i][j];
             }
         }
-        matMul(arr, arrTemp, powArr, rows, columns);
         print_arr(powArr,rows,columns);
+        printf("\n");
     }
     
     
@@ -189,6 +275,7 @@ void matMul(double **arr, double **arr2, double **arrRet, int rows, int columns)
             for(int k = 0; k < columns; ++k)
             {
                 arrRet[i][j] += arr[i][k] * arr2[k][j];
+                // std::cout<<arr[i][k]<<" * " <<arr2[k][j]<<std::endl;
             }
 }
 
